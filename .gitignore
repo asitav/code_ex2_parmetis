@@ -1,0 +1,11 @@
+# ignore all build folders
+/build*/
+/_build*/
+# ignore all build folders
+/install*/
+/_install*/
+# ignore backup files
+*~
+# ignore ctags/etags
+tags
+TAGS
