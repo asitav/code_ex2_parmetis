@@ -36,13 +36,10 @@ if(WITH_ParMETIS)
   find_package(ParMETIS REQUIRED)
   find_package(METIS REQUIRED)
 
-  set(GKLIB_PATH /usr/local/parmetis-4.0.3/metis/GKlib)
-
   # List of paths that the compiler will search for header files.
   # i.e., the -I equivalent
   INCLUDE_DIRECTORIES(${PARMETIS_INCLUDE_DIRS})
   INCLUDE_DIRECTORIES(${METIS_INCLUDE_DIRS})
-  INCLUDE_DIRECTORIES(${GKLIB_PATH})
   list(APPEND MYPROJ_DEPENDENCIES ${PARMETIS_LIBRARIES} ${METIS_LIBRARIES})
 endif()
 
