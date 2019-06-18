@@ -1,6 +1,6 @@
 # Building and Running #
 
-The code_ex1_metis code uses cmake to build all source files. This is intended for an "out of source build", namely used like this:
+The code_ex2_metis code uses cmake to build all source files. This is intended for an "out of source build", namely used like this:
 
 ```
 #!bash
@@ -14,5 +14,5 @@ In ccmake just `configure (c)` and `generate and exit (g)`. `configure (c)` butt
 ```
 #!bash
 cd build
-../install/bin/mtest # or ./ex_metis/mtest
+mpirun -np <number-of-procs> ../install/bin/parmetis_test # or mpirun -np <nprocs> ./ex_parmetis/parmetis_test
 ```
