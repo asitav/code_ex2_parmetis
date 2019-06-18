@@ -33,24 +33,16 @@ list(APPEND MYPROJ_DEPENDENCIES ${MPI_LIBRARIES})
 #ParMETIS
 option(WITH_ParMETIS "Link with ParMETIS?" ON)
 if(WITH_ParMETIS)
-  #old find_package(METIS REQUIRED)
-  #old find_package(ParMETIS REQUIRED)
+  find_package(ParMETIS REQUIRED)
+  find_package(METIS REQUIRED)
 
   set(GKLIB_PATH /usr/local/parmetis-4.0.3/metis/GKlib)
-  set(METIS_PATH /usr/local/parmetis-4.0.3/metis)
-  set(ParMETIS_PATH /usr/local/parmetis-4.0.3/metis)
-  set(METIS_INCLUDE_DIRS /usr/local/ParMETIS_4.0.3-gnu/include)
-  set(ParMETIS_INCLUDE_DIRS /usr/local/ParMETIS_4.0.3-gnu/include)
-  set(METIS_LIBRARIES /usr/local/ParMETIS_4.0.3-gnu/lib/libmetis.a)
-  set(ParMETIS_LIBRARIES /usr/local/ParMETIS_4.0.3-gnu/lib/libparmetis.a)
-
-  include(${GKLIB_PATH}/GKlibSystem.cmake)
 
   # List of paths that the compiler will search for header files.
   # i.e., the -I equivalent
-  INCLUDE_DIRECTORIES(${ParMETIS_INCLUDE_DIRS})
+  INCLUDE_DIRECTORIES(${PARMETIS_INCLUDE_DIRS})
   INCLUDE_DIRECTORIES(${METIS_INCLUDE_DIRS})
   INCLUDE_DIRECTORIES(${GKLIB_PATH})
-  list(APPEND MYPROJ_DEPENDENCIES ${ParMETIS_LIBRARIES} ${METIS_LIBRARIES})
+  list(APPEND MYPROJ_DEPENDENCIES ${PARMETIS_LIBRARIES} ${METIS_LIBRARIES})
 endif()
 

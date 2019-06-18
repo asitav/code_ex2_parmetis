@@ -154,7 +154,7 @@ void partgraphrecursive_test ( )
   cout << "\n";
   cout << "  Node  Part\n";
   cout << "\n";
-  for ( unsigned part_i = 0; part_i < nvtxs; part_i++ )
+  for ( idx_t part_i = 0; part_i < nvtxs; part_i++ )
   {
 	std::cout << "     " << part_i << "     " << part[part_i] << std::endl;
   }
@@ -261,7 +261,7 @@ void partgraphkway_test ( )
   cout << "\n";
   cout << "  Node  Part\n";
   cout << "\n";
-  for ( unsigned part_i = 0; part_i < nvtxs; part_i++ )
+  for ( idx_t part_i = 0; part_i < nvtxs; part_i++ )
   {
 	std::cout << "     " << part_i << "     " << part[part_i] << std::endl;
   }
@@ -311,7 +311,7 @@ void timestamp ( )
 
   len = std::strftime ( time_buffer, TIME_SIZE, "%d %B %Y %I:%M:%S %p", tm_ptr );
 
-  std::cout << time_buffer << "\n";
+  if (len > 0) std::cout << time_buffer << "\n";
 
   return;
 # undef TIME_SIZE
