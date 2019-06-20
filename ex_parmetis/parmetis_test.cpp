@@ -6,30 +6,31 @@
 
 using namespace std;
 
-# include <metis.h>
-//#include <GKlib.h>
+#include <metis.h>
 #include <parmetis.h>
 
 int main (int argc, char *argv[]);
-void partgraphkway_test ( );
+void partgraphkway_test_proc3 ( );
+void partgraphkway_test_proc1 ( );
 void timestamp ( );
 
 //****************************************************************************80
 
-int main (int argc, char *argv[])
 
 //****************************************************************************80
 //
 //  Purpose:
 //
 //    ParMETIS_TEST tests the ParMETIS library.
+int main (int argc, char *argv[])
 {
   // Init MPI
   MPI_Comm comm;
-  idx_t mpi_rank;
+  idx_t mpi_rank, mpi_size;
   MPI_Init(&argc, &argv);
   MPI_Comm_dup(MPI_COMM_WORLD, &comm);
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
 
   if (mpi_rank == 0)
   {
@@ -41,7 +42,14 @@ int main (int argc, char *argv[])
   }
 
   // Main partition call
-  partgraphkway_test();
+  if (mpi_size > 1)
+  {
+    partgraphkway_test_proc3();
+  }
+  else if (mpi_size == 1)
+  {
+    partgraphkway_test_proc1();
+  }
 
   // Terminate.
   if (mpi_rank == 0)
@@ -58,16 +66,15 @@ int main (int argc, char *argv[])
   MPI_Finalize();
 
   return EXIT_SUCCESS;
-}
-//****************************************************************************80
+} // main
 
-void partgraphkway_test ( )
+//****************************************************************************80
 
 /*
  *****************************************************************************80
  *  Purpose:
  *
- *    PARTGRAPHKWAY_TEST tests ParMETIS_V3_PartKway
+ *    PARTGRAPHKWAY_TEST_PROC3 tests ParMETIS_V3_PartKway
  *
  *  Discussion:
  *
@@ -80,6 +87,7 @@ void partgraphkway_test ( )
  *     10 --- 11 --- 12 --- 13 --- 14   <-- Proc 2
  *
  */
+void partgraphkway_test_proc3 ( )
 {
   idx_t mpi_rank, mpi_size;
   MPI_Comm comm;
@@ -205,12 +213,9 @@ void partgraphkway_test ( )
 
   if (mpi_rank == 0)
     cout << "\n"
-         << "PARTGRAPHKWAY_TEST:\n"
+         << "PARTGRAPHKWAY_TEST_PROC3:\n"
          << "  ParMETIS_V3_PartKway partitions a graph into K parts\n"
          << "  using multilevel K-way partition.\n";
-
-  //old int ret = METIS_PartGraphKway ( &nvtxs, &ncon, xadj, adjncy, NULL, NULL,
-  //old   NULL, &nParts, NULL, NULL, NULL, &objval, part );
 
   idx_t *vwgt = NULL;
   idx_t *adjwgt = NULL;
@@ -247,6 +252,7 @@ void partgraphkway_test ( )
 
   // Save partition info in files
   std::string path = "part_"+std::to_string(mpi_rank)+".txt";
+  std::cout << "Writing partition info into file: " << path << "\n";
   std::ios_base::openmode opt = std::ios_base::out;
   std::fstream pfptr;
   pfptr.open(path.c_str(), opt); // partition file streaming ptr
@@ -265,7 +271,142 @@ void partgraphkway_test ( )
   delete [] ubvec;
 
   return;
-}
+} // partgraphkway_test_proc3
+
+//****************************************************************************80
+
+
+/*
+ *****************************************************************************80
+ *  Purpose:
+ *
+ *    PARTGRAPHKWAY_TEST_PROC1 tests ParMETIS_V3_PartKway
+ *
+ *  Discussion:
+ *
+ *    The graph has the following form:
+ *
+ *     0 --- 1 --- 2
+ *     |     |     |
+ *     3 --- 4 --- 5
+ *
+ */
+void partgraphkway_test_proc1 ( )
+{
+  idx_t mpi_rank, mpi_size;
+  MPI_Comm comm;
+  MPI_Comm_dup(MPI_COMM_WORLD, &comm);
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+
+  assert(mpi_size == 1); // Valid for only 1 procs
+
+  // The number of vertices for each proc.
+  idx_t nvtxs = 6;
+
+  // Number of balancing constraints, which must be at least 1.
+  idx_t ncon = 1;
+
+  // vtxdist array: range of vertices local to each proc, unique for all procs
+  idx_t vtxdist[mpi_size + 1];
+  vtxdist[0] =  0;
+  vtxdist[1] =  6;
+
+  // Define xadj, and adjncy arrays for each proc
+  idx_t *xadj, *adjncy;
+
+  if (mpi_rank == 0)
+  {
+    // Pointers to initial entries in adjacency array.
+    xadj = new idx_t [nvtxs+1];
+    xadj[0] = 0;
+    xadj[1] = 2;
+    xadj[2] = 5;
+    xadj[3] = 7;
+    xadj[4] = 9;
+    xadj[5] = 12;
+    xadj[6] = 14;
+
+    // Adjacent vertices in consecutive index order.
+    idx_t nEdges = 7;
+    adjncy = new idx_t [2 * nEdges];
+    adjncy[ 0] = 1;
+    adjncy[ 1] = 3;
+    adjncy[ 2] = 0;
+    adjncy[ 3] = 4;
+    adjncy[ 4] = 2;
+    adjncy[ 5] = 1;
+    adjncy[ 6] = 5;
+    adjncy[ 7] = 0;
+    adjncy[ 8] = 4;
+    adjncy[ 9] = 3;
+    adjncy[10] = 1;
+    adjncy[11] = 5;
+    adjncy[12] = 4;
+    adjncy[13] = 2;
+  }
+
+  // The number of parts requested for the partition.
+  idx_t nparts = 2;
+
+  // On return, the partition vector for the graph.
+  idx_t part[nvtxs];
+
+  if (mpi_rank == 0)
+    cout << "\n"
+         << "PARTGRAPHKWAY_TEST_PROC1:\n"
+         << "  ParMETIS_V3_PartKway partitions a graph into K parts\n"
+         << "  using multilevel K-way partition.\n";
+
+  idx_t *vwgt = NULL;
+  idx_t *adjwgt = NULL;
+  idx_t wgtflag = 0;
+  idx_t numflag = 0;
+  real_t *tpwgts = NULL;
+  real_t *ubvec = NULL;
+  idx_t options[1];
+  options[0] = 0; // use default values
+  idx_t edgecut;
+
+  // Set tpwgts
+  tpwgts = new real_t [ncon*nparts];
+  for (int ipart = 0; ipart < nparts; ipart++)
+  {
+    for (int icon = 0; icon < ncon; icon++)
+    {
+      tpwgts[icon + ipart*ncon] = 1.0/(real_t)nparts;
+    }
+  }
+
+  // Set ubvec
+  ubvec = new real_t [ncon];
+  for (int icon = 0; icon < ncon; icon++) ubvec[icon] = 1.05;
+
+  ParMETIS_V3_PartKway(vtxdist, xadj, adjncy, vwgt, adjwgt, &wgtflag, &numflag,
+      &ncon, &nparts, tpwgts, ubvec, options, &edgecut, part, &comm);
+
+  // Save partition info in files
+  std::string path = "part_proc1_"+std::to_string(mpi_rank)+".txt";
+  std::cout << "Writing partition info into file: " << path << "\n";
+  std::ios_base::openmode opt = std::ios_base::out;
+  std::fstream pfptr;
+  pfptr.open(path.c_str(), opt); // partition file streaming ptr
+  pfptr << "\n Rank = " << mpi_rank << "\n"
+    << "  Edge cuts for partition = " << edgecut << "\n"
+    << "  Partition vector:\n"
+    << "  Node  Part\n";
+  for ( idx_t part_i = 0; part_i < nvtxs; part_i++ )
+  {
+    pfptr << "     " << part_i << "     " << part[part_i] << std::endl;
+  }
+
+  delete [] xadj;
+  delete [] adjncy;
+  delete [] tpwgts;
+  delete [] ubvec;
+
+  return;
+} // partgraphkway_test_proc1
 //****************************************************************************80
 
 void timestamp ( )
