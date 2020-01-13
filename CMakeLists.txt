@@ -39,7 +39,8 @@ set(BUILD_LIBRARY_TYPE "SHARED" CACHE STRING "STATIC vs. DYNAMIC/SHARED library?
 set_property(CACHE BUILD_LIBRARY_TYPE PROPERTY STRINGS "SHARED;STATIC")
 
 # program
-add_subdirectory(ex_parmetis)
 add_subdirectory(ex_metis)
+add_subdirectory(ex_parmetis)
+add_subdirectory(ex_parmetisIO)
 
 configure_file(cmake/MYPROJ-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/MYPROJ-config.cmake)
