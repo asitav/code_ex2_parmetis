@@ -159,6 +159,18 @@ void partgraphrecursive_test ( )
 	std::cout << "     " << part_i << "     " << part[part_i] << std::endl;
   }
 
+  // test compute cuts
+  int cuts, i, j;
+  for (cuts = 0, i = 0; i < nvtxs; i++)
+  {
+    for (j = xadj[i]; j < xadj[i+1]; j++)
+    {
+      if (part[i] != part[ adjncy[j] ]) cuts++;
+    }
+  }
+  cuts = cuts/2;
+  cout << ">>>>> Computed cuts: " << cuts << "\n";
+
   return;
 }
 //****************************************************************************80
@@ -265,6 +277,18 @@ void partgraphkway_test ( )
   {
 	std::cout << "     " << part_i << "     " << part[part_i] << std::endl;
   }
+
+  // test compute cuts
+  int cuts, i, j;
+  for (cuts = 0, i = 0; i < nvtxs; i++)
+  {
+    for (j = xadj[i]; j < xadj[i+1]; j++)
+    {
+      if (part[i] != part[ adjncy[j] ]) cuts++;
+    }
+  }
+  cuts = cuts/2;
+  cout << ">>>>> Computed cuts: " << cuts << "\n";
 
   return;
 }
