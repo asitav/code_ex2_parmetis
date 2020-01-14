@@ -6,6 +6,9 @@
 /_install*/
 # ignore backup files
 *~
+# ignore all swap files
+/*.swp/
+/*.swo/
 # ignore ctags/etags
 tags
 TAGS

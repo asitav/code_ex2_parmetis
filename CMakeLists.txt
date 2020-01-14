@@ -42,5 +42,6 @@ set_property(CACHE BUILD_LIBRARY_TYPE PROPERTY STRINGS "SHARED;STATIC")
 add_subdirectory(ex_metis)
 add_subdirectory(ex_parmetis)
 add_subdirectory(ex_parmetisIO)
+add_subdirectory(ex_partmesh)
 
 configure_file(cmake/MYPROJ-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/MYPROJ-config.cmake)
