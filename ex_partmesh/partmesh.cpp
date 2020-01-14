@@ -17,11 +17,23 @@ using namespace std;
 int main (int argc, char *argv[]);
 void partMeshKway_proc1_tri2();
 void partMeshKway_proc1_trihex6();
+void partMeshKway_proc3_trihex6_old();
 void partMeshKway_proc3_trihex6();
 void timestamp ( );
 
 //****************************************************************************80
-
+// Data structure to store mesh info
+//****************************************************************************80
+typedef struct mesh_t
+{
+  idx_t gnelms, gnnodes;
+  idx_t nelms, nnodes;
+  idx_t ncon;
+  idx_t *elmdist;
+  idx_t *elmind;
+  idx_t *elmwgt;
+  idx_t *elmindptr;
+} mesh_t;
 
 //****************************************************************************80
 //
@@ -47,6 +59,7 @@ int main (int argc, char *argv[])
   // Main partition call
   if (mpi_size > 1)
   {
+    //partMeshKway_proc3_trihex6_old();
     partMeshKway_proc3_trihex6();
   }
   else if (mpi_size == 1)
@@ -174,7 +187,7 @@ void partMeshKway_proc1_trihex6()
   idx_t numflag = 0;
   idx_t ncon = 1;
   idx_t ncommnodes = 2;
-  idx_t nparts = 2; // fix to 2 parts now ...
+  idx_t nparts = 3;
   idx_t nelms = 6; //  each proc (proc 0 only here ) has 6 elements
   //idx_t esizemax = 3; // max num of nodes per elm (3 for tri)
   idx_t options[10];
@@ -243,7 +256,7 @@ void partMeshKway_proc1_trihex6()
  * |   |   |   |
  * 6---7---8---9
  */
-void partMeshKway_proc3_trihex6()
+void partMeshKway_proc3_trihex6_old()
 {
   idx_t mpi_rank, mpi_size;
   MPI_Comm comm;
@@ -374,6 +387,208 @@ void partMeshKway_proc3_trihex6()
   delete [] tpwgts;
   delete [] eptr  ;
   delete [] eind  ;
+}
+
+//****************************************************************************80
+
+void check_mpi_size()
+{
+  idx_t mpi_rank, mpi_size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+  if (mpi_size != 3) { cout << " Nprocs is not 3; Exiting!! \n"; throw 11;}
+}
+
+//****************************************************************************80
+
+void distMesh(mesh_t & mesh)
+{
+  idx_t mpi_rank, mpi_size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+
+  mesh.elmwgt = nullptr;
+
+  mesh.gnelms = 6;
+  mesh.gnnodes = 10;
+
+  mesh.elmdist = new idx_t [mpi_size + 1];
+  mesh.elmdist[0] = 0;
+  mesh.elmdist[1] = 2;
+  mesh.elmdist[2] = 4;
+  mesh.elmdist[3] = 6;
+
+  mesh.elmindptr = nullptr;
+  mesh.elmind = nullptr;
+
+  // Define element index and element index ptr arrays
+  if (mpi_rank == 0)
+  {
+    mesh.nelms = 2;
+    mesh.nnodes = 7;
+
+    // Pointers to initial entries in mesh.elmind (element node list) array
+    mesh.elmindptr = new idx_t [mesh.nelms + 1];
+    mesh.elmindptr[0] = 0;
+    mesh.elmindptr[1] = 3;
+    mesh.elmindptr[2] = mesh.nnodes;
+
+    // Adjacency array: node list stored in elm by elm manner
+    // elmind[mesh.elmindptr[i]: mesh.elmindptr[i+1]-1] saves nodes of elm i
+    mesh.elmind = new idx_t [mesh.nnodes];
+    mesh.elmind[0] = 0; // elm 0
+    mesh.elmind[1] = 2; // ...
+    mesh.elmind[2] = 3; // ...
+    mesh.elmind[3] = 1; // elm 1
+    mesh.elmind[4] = 0; // ...
+    mesh.elmind[5] = 3; // ...
+    mesh.elmind[6] = 4; // ...
+  }
+  else if (mpi_rank == 1)
+  {
+    mesh.nelms = 2;
+    mesh.nnodes = 7;
+
+    // Pointers to initial entries in mesh.elmind (element node list) array
+    mesh.elmindptr = new idx_t [mesh.nelms + 1];
+    mesh.elmindptr[0] = 0;
+    mesh.elmindptr[1] = 3;
+    mesh.elmindptr[2] = mesh.nnodes;
+
+    // Adjacency array: node list stored in elm by elm manner
+    // elmind[mesh.elmindptr[i]: mesh.elmindptr[i+1]-1] saves nodes of elm i
+    mesh.elmind = new idx_t [mesh.nnodes];
+    mesh.elmind[0] = 1; // elm 0
+    mesh.elmind[1] = 4; // ...
+    mesh.elmind[2] = 5; // ...
+    mesh.elmind[3] = 3; // elm 1
+    mesh.elmind[4] = 2; // ...
+    mesh.elmind[5] = 6; // ...
+    mesh.elmind[6] = 7; // ...
+  }
+  else if (mpi_rank == 2)
+  {
+    mesh.nelms = 2;
+    mesh.nnodes = 8;
+
+    // Pointers to initial entries in mesh.elmind (element node list) array
+    mesh.elmindptr = new idx_t [mesh.nelms + 1];
+    mesh.elmindptr[0] = 0;
+    mesh.elmindptr[1] = 4;
+    mesh.elmindptr[2] = mesh.nnodes;
+
+    // Adjacency array: node list stored in elm by elm manner
+    // elmind[mesh.elmindptr[i]: mesh.elmindptr[i+1]-1] saves nodes of elm i
+    mesh.elmind = new idx_t [mesh.nnodes];
+    mesh.elmind[0] = 4; // elm 0
+    mesh.elmind[1] = 3; // ...
+    mesh.elmind[2] = 7; // ...
+    mesh.elmind[3] = 8; // ...
+    mesh.elmind[4] = 5; // elm 1
+    mesh.elmind[5] = 4; // ...
+    mesh.elmind[6] = 8; // ...
+    mesh.elmind[7] = 9; // ...
+  }
+  else
+  {
+    cout << "mpi_rank > 2 not possible! Exiting!!!\n";
+    throw 12;
+  }
+}
+
+//****************************************************************************80
+
+void savePartFiles(idx_t *part, idx_t nelms, idx_t edgecut)
+{
+  idx_t mpi_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
+  // Save partition info in files
+  std::string path = "part_proc3_"+std::to_string(mpi_rank)+"_triQua.txt";
+  std::cout << "Writing partition info into file: " << path << "\n";
+  std::ios_base::openmode opt = std::ios_base::out;
+  std::fstream pfptr;
+  pfptr.open(path.c_str(), opt); // partition file streaming ptr
+  pfptr << "\n Rank = " << mpi_rank << "\n"
+    << "  Edge cuts for partition = " << edgecut << "\n"
+    << "  Partition vector:\n"
+    << "  Element  Part\n";
+  for ( idx_t part_i = 0; part_i < nelms; part_i++ )
+  {
+    pfptr << "     " << part_i << "     " << part[part_i] << std::endl;
+  }
+}
+
+//****************************************************************************80
+
+void partitionMesh(mesh_t & mesh)
+{
+  idx_t mpi_size;
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+
+  // Variables for ParMETIS_V3_PartMeshKway
+  idx_t wgtflag = 0;
+  idx_t numflag = 0;
+  idx_t ncommnodes = 2;
+  idx_t nparts = mpi_size;
+  idx_t edgecut;
+  idx_t part [mesh.nelms];
+
+  // Set up options
+  idx_t options[10];
+  options[0] = 1;
+  options[PMV3_OPTION_DBGLVL] = 7;
+  options[PMV3_OPTION_SEED] = 0;
+
+  // Set up weights
+  mesh.ncon = 1; // for all procs
+  real_t *tpwgts = nullptr, ubvec[MAXNCON];
+  tpwgts = new real_t [ nparts * mesh.ncon ];
+  for (int i = 0; i < nparts * mesh.ncon; ++i) tpwgts[i] = 1.0/(real_t) (nparts);
+  for (int i = 0; i < mesh.ncon; ++i) ubvec[i] = IMBALANCE_TOLERANCE;
+
+  MPI_Comm comm;
+  MPI_Comm_dup(MPI_COMM_WORLD, &comm);
+  ParMETIS_V3_PartMeshKway(mesh.elmdist, mesh.elmindptr, mesh.elmind, mesh.elmwgt, &wgtflag,
+      &numflag, &mesh.ncon, &ncommnodes, &nparts, tpwgts, ubvec, options,
+      &edgecut, part, &comm);
+
+  savePartFiles(part, mesh.nelms, edgecut);
+}
+
+//****************************************************************************80
+
+void freeMeshPtrs(mesh_t mesh)
+{
+  delete [] mesh.elmdist;
+  delete [] mesh.elmindptr;
+  delete [] mesh.elmind;
+}
+
+//****************************************************************************80
+/*
+ *
+ *  Tri/Qua hybrid mesh:
+ *
+ *     0---1
+ *    /|   |\
+ *   / |   | \
+ *  /e0|e1 |e2\
+ * 2---3---4---5
+ * |   |   |   |
+ * | e3|e4 |e5 |
+ * |   |   |   |
+ * 6---7---8---9
+ */
+void partMeshKway_proc3_trihex6()
+{
+  check_mpi_size();
+
+  mesh_t mesh;
+  distMesh(mesh); // Set up distributed mesh in 3 procs
+  partitionMesh(mesh);
+
+  freeMeshPtrs(mesh);
 }
 
 //****************************************************************************80
