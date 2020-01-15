@@ -38,6 +38,9 @@ cmake \
   ../
 make -j install
 
+# This step is necessary to use shared lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/u/amishra4/software/parmetis-4.0.3/install/lib/
+
 mpiexec -np <nprocs> ../install/bin/partmesh # or mpiexec -np <nprocs> ./ex_partmesh/partmesh
 ../install/bin/partmesh # or ./ex_partmesh/partmesh # for single proc test
 ```
